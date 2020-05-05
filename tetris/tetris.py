@@ -2,6 +2,7 @@
 
 
 import pygame
+import random
 
 
 # Set Global Constants
@@ -28,11 +29,23 @@ LGRAY = (30, 30, 30)
 DGRAY = (185, 185, 185)
 WHITE = (255, 255, 255)
 
+# Piece Shapes and Colors
+O = [[(0,0), (1,0), (0,1), (1,1)]]
+Z = [[(0,0), (1,0), (1,1), (2,1)], [(1,0), (0,1), (1,1), (0,2)]]
+
+SHAPES = [O, Z]
+SHAPE_COLORS = [YELLOW, RED]
+
 
 #TODO: Create Classes: Piece
 class Piece():
-    pass
-
+    def __init__(self, x, y, shape):
+        self.x = x
+        self.y = y
+        self.shape = shape
+        self.color = SHAPE_COLORS[SHAPES.index(shape)]
+        self.orientation = 0
+        
 
 # Create Game class:
 class Game():
@@ -43,6 +56,8 @@ class Game():
         # Create display surface
         self.window = pygame.display.set_mode(SIZE) 
         pygame.display.set_caption('Tetris')
+        self.current_piece = Piece(5, 0, random.choice(SHAPES))
+        self.next_piece = Piece(5, 0, random.choice(SHAPES))
         self.filled_blocks = {}
         # Draw grid outline
         self.grid = self.make_grid(self.filled_blocks)
@@ -71,7 +86,19 @@ class Game():
 
 
     def draw_window(self, window, grid):
+        pygame.draw.rect(window, RED, (TOP_LEFT_X, TOP_LEFT_Y, GRID_PX_WIDTH, GRID_PX_HEIGHT), 5)
+        
+        for i in range(len(grid)):
+            for j in range(len(grid[i])):
+                pygame.draw.rect(
+                    window, 
+                    grid[i][j], 
+                    (TOP_LEFT_X + j*BLOCK_SIZE, TOP_LEFT_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE),
+                    0
+                    )
+        
         self.draw_grid(window, grid)
+
 
 
     def terminate(self):
@@ -85,13 +112,15 @@ class Game():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.terminate()
-        # _check_collision()
-        # play()
-            # event loop
-                #clock.tick(30)
-            # update
 
-            # Define frame rate
+            # Put piece into grid
+            for block in self.current_piece.shape[self.current_piece.orientation]:
+                x = self.current_piece.x + block[0]
+                y = self.current_piece.y + block[1]
+                if y > -1:
+                    self.grid[y][x] = self.current_piece.color
+
+       
             self.clock.tick(30)
 
             self.draw_window(self.window, self.grid)
