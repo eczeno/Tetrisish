@@ -17,6 +17,8 @@ GRID_PX_HEIGHT = 600
 BLOCK_SIZE = GRID_PX_HEIGHT // GRID_HEIGHT
 TOP_LEFT_X = (WIDTH - GRID_PX_WIDTH) // 2
 TOP_LEFT_Y = HEIGHT - GRID_PX_HEIGHT
+INIT_FALL_SPEED = 1
+
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
 CYAN = (0, 255, 255)
@@ -182,9 +184,17 @@ class Game():
 
     
     def play(self):
+        fall_time = 0
+        fall_speed = INIT_FALL_SPEED
+        moving_down = False
+        moving_left = False
+        moving_right = False
         
         running = True
         while running:
+            fall_time += self.clock.get_rawtime()
+            self.clock.tick()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.terminate()
@@ -193,21 +203,49 @@ class Game():
                         self.terminate()
                     elif event.key == pygame.K_RIGHT:
                         self.current_piece.x += 1
+                        # moving_right = True                       
                         if not self.is_valid_space():
                             self.current_piece.x -= 1
                     elif event.key == pygame.K_LEFT:
                         self.current_piece.x -= 1
+                        # moving_left = True
                         if not self.is_valid_space():
                             self.current_piece.x += 1
                     elif event.key == pygame.K_DOWN:
                         self.current_piece.y += 1
+                        # moving_down = True
                         if not self.is_valid_space():
                             self.current_piece.y -= 1
                             self.lock_piece()
                     elif event.key == pygame.K_UP:
                         self.current_piece.orientation = (self.current_piece.orientation + 1) % len(self.current_piece.shape)
-                        
+                        if not self.is_valid_space():
+                            self.current_piece.orientation = (self.current_piece.orientation -1) % len(self.current_piece.shape)
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_RIGHT:
+                        moving_right = False
+                    elif event.key == pygame.K_LEFT:
+                        moving_left = False
+                    elif event.key == pygame.K_DOWN:
+                        moving_down == False
+                    
 
+            #Check for held down keys:
+            if moving_down:
+                self.current_piece.y +=1
+                if not self.is_valid_space():
+                    self.current_piece.y -= 1
+                    moving_down = False
+                    self.lock_piece()
+            elif moving_left:
+                self.current_piece.x -= 1
+                if not self.is_valid_space():
+                    self.current_piece.x += 1
+            elif moving_right:
+                self.current_piece.x += 1
+                if not self.is_valid_space():
+                    self.current_piece.x -= 1
+            
 
             # Put piece into grid
             self.grid = self.make_grid()
@@ -222,12 +260,14 @@ class Game():
             
 
 
-            self.clock.tick(30)
+            
             self.window.fill(BACKGROUND)
             self.draw_window()
             pygame.display.update()
 
-            self.drop_piece()
+            if fall_time/1000 > fall_speed:
+                fall_time = 0
+                self.drop_piece()
 
 
 
