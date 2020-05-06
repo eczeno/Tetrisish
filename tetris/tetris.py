@@ -119,6 +119,19 @@ class Game():
         return answer
 
 
+    def remove_line(self, i, row):
+        for j in range(len(row)):
+            self.filled_blocks.pop((j, i))
+        move_down = []        
+        for x, y in [*self.filled_blocks]:
+            if y < i:
+                move_down.append((x, y))
+        new_blocks = {}
+        for x, y in move_down:
+            new_blocks[(x, y+1)] = self.filled_blocks.pop((x, y))
+        self.filled_blocks.update(new_blocks)
+                
+        
     def lock_piece(self):
         coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
                    for block in self.current_piece.shape[self.current_piece.orientation] ]
@@ -129,6 +142,13 @@ class Game():
         self.next_piece = Piece(4, 0, random.choice(SHAPES))
         if self.next_piece.name == 'I':
             self.next_piece.x -= 1
+        # Check for lines to remove:
+        for i, row in enumerate(self.grid):
+            remove = True
+            if BACKGROUND in row:
+                remove = False
+            if remove:
+                self.remove_line(i, row)
 
 
     def drop_piece(self):
@@ -221,30 +241,32 @@ class Game():
                         self.current_piece.orientation = (self.current_piece.orientation + 1) % len(self.current_piece.shape)
                         if not self.is_valid_space():
                             self.current_piece.orientation = (self.current_piece.orientation -1) % len(self.current_piece.shape)
-                elif event.type == pygame.KEYUP:
-                    if event.key == pygame.K_RIGHT:
-                        moving_right = False
-                    elif event.key == pygame.K_LEFT:
-                        moving_left = False
-                    elif event.key == pygame.K_DOWN:
-                        moving_down == False
+                # elif event.type == pygame.KEYUP:
+                #     if event.key == pygame.K_RIGHT:
+                #         moving_right = False
+                #     elif event.key == pygame.K_LEFT:
+                #         moving_left = False
+                #     elif event.key == pygame.K_DOWN:
+                #         moving_down == False
                     
+            
+
 
             #Check for held down keys:
-            if moving_down:
-                self.current_piece.y +=1
-                if not self.is_valid_space():
-                    self.current_piece.y -= 1
-                    moving_down = False
-                    self.lock_piece()
-            elif moving_left:
-                self.current_piece.x -= 1
-                if not self.is_valid_space():
-                    self.current_piece.x += 1
-            elif moving_right:
-                self.current_piece.x += 1
-                if not self.is_valid_space():
-                    self.current_piece.x -= 1
+            # if moving_down:
+            #     self.current_piece.y +=1
+            #     if not self.is_valid_space():
+            #         self.current_piece.y -= 1
+            #         moving_down = False
+            #         self.lock_piece()
+            # elif moving_left:
+            #     self.current_piece.x -= 1
+            #     if not self.is_valid_space():
+            #         self.current_piece.x += 1
+            # elif moving_right:
+            #     self.current_piece.x += 1
+            #     if not self.is_valid_space():
+            #         self.current_piece.x -= 1
             
 
             # Put piece into grid
@@ -259,6 +281,7 @@ class Game():
                     self.grid[y][x] = self.current_piece.color
             
 
+            
 
             
             self.window.fill(BACKGROUND)
