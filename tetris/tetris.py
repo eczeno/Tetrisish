@@ -62,7 +62,7 @@ SHAPE_COLORS = [YELLOW, RED, BLUE, GREEN, CYAN, PURPLE, ORANGE]
 SHAPE_NAMES = ['O', 'Z', 'S', 'J', 'L', 'T', 'I']
 
 
-#TODO: Create Classes: Piece
+# Create Classes: Piece
 class Piece():
     def __init__(self, x, y, shape):
         self.x = x
@@ -86,7 +86,6 @@ class Game():
         self.next_piece = Piece(4, -2, random.choice(SHAPES))
         if self.current_piece.name == 'I':
             self.current_piece.x -= 1
-            self.next_piece.x -= 1
         self.filled_blocks = {}
         # Draw grid outline
         self.grid = self.make_grid()
@@ -96,7 +95,8 @@ class Game():
     
 
     def is_valid_space(self):
-        coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) for block in self.current_piece.shape[self.current_piece.orientation] ]
+        coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
+                   for block in self.current_piece.shape[self.current_piece.orientation] ]
         for coord in coords:
             x = coord[0]
             y = coord[1]
@@ -111,10 +111,23 @@ class Game():
         return answer
 
 
+    def lock_piece(self):
+        coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
+                   for block in self.current_piece.shape[self.current_piece.orientation] ]
+        color = self.current_piece.color
+        for block in coords:
+            self.filled_blocks[block] = color
+        self.current_piece = self.next_piece
+        self.next_piece = Piece(4, 0, random.choice(SHAPES))
+        if self.next_piece.name == 'I':
+            self.next_piece.x -= 1
+
+
     def drop_piece(self):
         self.current_piece.y += 1
         if not self.is_valid_space():
             self.current_piece.y -= 1
+            self.lock_piece()
         
     
     def draw_grid_lines(self, window, grid):
