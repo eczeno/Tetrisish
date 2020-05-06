@@ -71,6 +71,9 @@ class Piece():
         self.color = SHAPE_COLORS[SHAPES.index(shape)]
         self.name = SHAPE_NAMES[SHAPES.index(shape)]
         self.orientation = 0
+    
+    def __repr__(self):
+        return f'{name} at ({self.x}, {self.y})'
         
 
 # Create Game class:
@@ -83,7 +86,7 @@ class Game():
         self.window = pygame.display.set_mode(SIZE) 
         pygame.display.set_caption('Tetris')
         self.current_piece = Piece(4, 0, random.choice(SHAPES))
-        self.next_piece = Piece(4, -2, random.choice(SHAPES))
+        self.next_piece = Piece(4, 0, random.choice(SHAPES))
         if self.current_piece.name == 'I':
             self.current_piece.x -= 1
         self.filled_blocks = {}
@@ -97,17 +100,17 @@ class Game():
     def is_valid_space(self):
         coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
                    for block in self.current_piece.shape[self.current_piece.orientation] ]
-        for coord in coords:
-            x = coord[0]
-            y = coord[1]
-            if coord in self.filled_blocks:
+        answer = True
+        for block in coords:
+            x = block[0]
+            y = block[1]
+            if block in self.filled_blocks:
                 answer = False
             elif x < 0 or x > 9:
                 answer = False
             elif y > 19:
                 answer = False
-            else:
-                answer = True
+            
         return answer
 
 
@@ -196,12 +199,14 @@ class Game():
                     self.grid[y][x] = self.current_piece.color
             
 
-            self.drop_piece()
 
             self.clock.tick(30)
             self.window.fill(BACKGROUND)
             self.draw_window()
             pygame.display.update()
+
+            self.drop_piece()
+
 
 
 def main():
