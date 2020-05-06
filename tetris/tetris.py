@@ -19,7 +19,7 @@ TOP_LEFT_X = (WIDTH - GRID_PX_WIDTH) // 2
 TOP_LEFT_Y = HEIGHT - GRID_PX_HEIGHT
 INIT_FALL_SPEED = 1
 NEXT_TOP_LEFT_X = 460
-NEXT_TOP_LEFT_Y = 100
+NEXT_TOP_LEFT_Y = 150
 
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
@@ -88,7 +88,7 @@ class Game():
         pygame.init()
         # Create display surface
         self.window = pygame.display.set_mode(SIZE) 
-        pygame.display.set_caption('Tetris')
+        pygame.display.set_caption('Tetrisish')
         #Generate pieces
         self.current_piece = Piece(4, 0, random.choice(SHAPES))
         self.next_piece = Piece(4, 0, random.choice(SHAPES))
@@ -116,8 +116,7 @@ class Game():
             elif x < 0 or x > 9:
                 answer = False
             elif y > 19:
-                answer = False
-            
+                answer = False            
         return answer
 
 
@@ -133,7 +132,15 @@ class Game():
             new_blocks[(x, y+1)] = self.filled_blocks.pop((x, y))
         self.filled_blocks.update(new_blocks)
                 
-        
+    
+    def check_lost(self):
+        answer = False
+        for (x,y) in [*self.filled_blocks]:
+            if y < 0:
+                answer = True
+        return answer
+
+       
     def lock_piece(self):
         coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
                    for block in self.current_piece.shape[self.current_piece.orientation] ]
@@ -151,7 +158,8 @@ class Game():
                 remove = False
             if remove:
                 self.remove_line(i, row)
-
+        if self.check_lost():
+            self.lose_game()
 
     def drop_piece(self):
         self.current_piece.y += 1
@@ -182,6 +190,17 @@ class Game():
     def draw_window(self):
         self.window.fill(BACKGROUND)
 
+        # Draw header
+        pygame.font.init()
+        header_font = pygame.font.SysFont('comicsans', 50)
+        header = header_font.render('Tetrisish', 1, PURPLE, BACKGROUND)
+        self.window.blit(header, ((TOP_LEFT_X + GRID_PX_WIDTH // 2 - header.get_width() // 2), 10))
+
+        # Draw next piece label
+        next_font = pygame.font.SysFont('comicsans', 30)
+        next_label = next_font.render('Next Piece', 1, GREEN, BACKGROUND)
+        self.window.blit(next_label, (NEXT_TOP_LEFT_X, NEXT_TOP_LEFT_Y - 50))
+
         # Draw next_piece
         for block in self.next_piece.shape[0]:
 
@@ -208,7 +227,7 @@ class Game():
 
 
     def lose_game(self):
-        pass
+        self.terminate()
 
 
     def terminate(self):
