@@ -85,15 +85,18 @@ class Game():
         # Create display surface
         self.window = pygame.display.set_mode(SIZE) 
         pygame.display.set_caption('Tetris')
+        #Generate pieces
         self.current_piece = Piece(4, 0, random.choice(SHAPES))
         self.next_piece = Piece(4, 0, random.choice(SHAPES))
+        # Establish grid and filled_blocks dict
+        self.filled_blocks = {}
+        self.grid = self.make_grid()
+        # Adjust starting position of 'I' pieces
         if self.current_piece.name == 'I':
             self.current_piece.x -= 1
-        self.filled_blocks = {}
-        # Draw grid outline
-        self.grid = self.make_grid()
-        #TODO: finish init
-
+        if self.next_piece.name == 'I':
+            self.next_piece.x -= 1       
+        # Set clock
         self.clock = pygame.time.Clock()
     
 
@@ -185,6 +188,25 @@ class Game():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.terminate()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        self.terminate()
+                    elif event.key == pygame.K_RIGHT:
+                        self.current_piece.x += 1
+                        if not self.is_valid_space():
+                            self.current_piece.x -= 1
+                    elif event.key == pygame.K_LEFT:
+                        self.current_piece.x -= 1
+                        if not self.is_valid_space():
+                            self.current_piece.x += 1
+                    elif event.key == pygame.K_DOWN:
+                        self.current_piece.y += 1
+                        if not self.is_valid_space():
+                            self.current_piece.y -= 1
+                            self.lock_piece()
+                    elif event.key == pygame.K_UP:
+                        self.current_piece.orientation = (self.current_piece.orientation + 1) % len(self.current_piece.shape)
+                        
 
 
             # Put piece into grid
