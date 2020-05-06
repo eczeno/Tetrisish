@@ -19,8 +19,10 @@ TOP_LEFT_X = (WIDTH - GRID_PX_WIDTH) // 2
 TOP_LEFT_Y = HEIGHT - GRID_PX_HEIGHT
 INIT_FALL_SPEED = 1
 MOVE_SPEED = 0.1
-NEXT_TOP_LEFT_X = 460
+NEXT_TOP_LEFT_X = 490
 NEXT_TOP_LEFT_Y = 150
+
+SCORES = {'1': 40, '2': 100, '3': 300, '4': 1200}
 
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
@@ -100,7 +102,9 @@ class Game():
         if self.current_piece.name == 'I':
             self.current_piece.x -= 1
         if self.next_piece.name == 'I':
-            self.next_piece.x -= 1       
+            self.next_piece.x -= 1         
+        # Initialize score
+        self.score = 0   
         # Set clock
         self.clock = pygame.time.Clock()
     
@@ -153,14 +157,19 @@ class Game():
         if self.next_piece.name == 'I':
             self.next_piece.x -= 1
         # Check for lines to remove:
+        remove_count = 0
         for i, row in enumerate(self.grid):
             remove = True
             if BACKGROUND in row:
                 remove = False
             if remove:
                 self.remove_line(i, row)
+                remove_count += 1
+        if remove_count:
+            self.score += SCORES[str(remove_count)]
         if self.check_lost():
             self.lose_game()
+    
         
     
     def draw_grid_lines(self, window, grid):
@@ -194,7 +203,12 @@ class Game():
         # Draw next piece label
         next_font = pygame.font.SysFont('comicsans', 30)
         next_label = next_font.render('Next Piece', 1, GREEN, BACKGROUND)
-        self.window.blit(next_label, (NEXT_TOP_LEFT_X, NEXT_TOP_LEFT_Y - 50))
+        self.window.blit(next_label, (NEXT_TOP_LEFT_X - 20, NEXT_TOP_LEFT_Y - 50))
+
+        # Draw current score
+        score_font = pygame.font.SysFont('comicsans', 30)
+        score_label = score_font.render(f'Score: {self.score}', 1, BLUE)
+        self.window.blit(score_label, (TOP_LEFT_X - 130, TOP_LEFT_Y + 130))
 
         # Draw next_piece
         for block in self.next_piece.shape[0]:
@@ -256,6 +270,7 @@ class Game():
         moving_down = False
         moving_left = False
         moving_right = False
+        
         
         running = True
         while running:
