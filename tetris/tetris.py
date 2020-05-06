@@ -4,6 +4,7 @@
 import pygame
 import random
 import sys
+from pathlib import Path
 
 
 # Set Global Constants
@@ -22,7 +23,9 @@ MOVE_SPEED = 0.1
 NEXT_TOP_LEFT_X = 490
 NEXT_TOP_LEFT_Y = 150
 
-SCORES = {'1': 40, '2': 100, '3': 300, '4': 1200}
+SCORE_REFERENCE = {'1': 40, '2': 100, '3': 300, '4': 1200}
+
+scores_PATH = Path('data/scores.txt') 
 
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
@@ -104,7 +107,10 @@ class Game():
         if self.next_piece.name == 'I':
             self.next_piece.x -= 1         
         # Initialize score
-        self.score = 0   
+        self.score = 0
+        # Load previous scores
+        self.scores = self.load_scores()
+        self.max_score = max(self.scores['player1'])   
         # Set clock
         self.clock = pygame.time.Clock()
     
@@ -166,7 +172,7 @@ class Game():
                 self.remove_line(i, row)
                 remove_count += 1
         if remove_count:
-            self.score += SCORES[str(remove_count)]
+            self.score += SCORE_REFERENCE[str(remove_count)]
         if self.check_lost():
             self.lose_game()
     
@@ -210,6 +216,11 @@ class Game():
         score_label = score_font.render(f'Score: {self.score}', 1, BLUE)
         self.window.blit(score_label, (TOP_LEFT_X - 130, TOP_LEFT_Y + 130))
 
+        # Draw max score
+        max_font = pygame.font.SysFont('comicsans', 25)
+        max_label = max_font.render(f'Max Score: {self.max_score}', 1, RED)
+        self.window.blit(max_label, (TOP_LEFT_X - 130, TOP_LEFT_Y + 250))
+
         # Draw next_piece
         for block in self.next_piece.shape[0]:
 
@@ -236,12 +247,28 @@ class Game():
 
 
     def lose_game(self):
+        if 'player1' in self.scores.keys():
+            self.scores['player1'].append(self.score)
+        else:
+            self.scores['player1'] = [self.score]
+        self.save_scores()
+
         self.terminate()
 
 
-    def terminate(self):
+    def terminate(self):        
         pygame.quit()
         sys.exit()
+
+
+    def save_scores(self):
+        with open(scores_PATH, 'w') as scores_file:
+            scores_file.write(str(self.scores))
+
+    
+    def load_scores(self):
+        with open(scores_PATH, 'r') as scores_file:
+            return eval(scores_file.read())
 
     
     def move_left(self):
