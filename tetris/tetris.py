@@ -160,12 +160,6 @@ class Game():
                 self.remove_line(i, row)
         if self.check_lost():
             self.lose_game()
-
-    def drop_piece(self):
-        self.current_piece.y += 1
-        if not self.is_valid_space():
-            self.current_piece.y -= 1
-            self.lock_piece()
         
     
     def draw_grid_lines(self, window, grid):
@@ -235,6 +229,25 @@ class Game():
         sys.exit()
 
     
+    def move_left(self):
+        self.current_piece.x -= 1                  
+        if not self.is_valid_space():
+            self.current_piece.x += 1
+
+
+    def move_right(self):
+        self.current_piece.x += 1                     
+        if not self.is_valid_space():
+            self.current_piece.x -= 1
+
+
+    def move_down(self):
+        self.current_piece.y += 1
+        if not self.is_valid_space():
+            self.current_piece.y -= 1
+            self.lock_piece()
+
+    
     def play(self):
         fall_time = 0
         fall_speed = INIT_FALL_SPEED
@@ -254,21 +267,11 @@ class Game():
                     if event.key == pygame.K_q:
                         self.terminate()
                     elif event.key == pygame.K_RIGHT:
-                        self.current_piece.x += 1
-                        # moving_right = True                       
-                        if not self.is_valid_space():
-                            self.current_piece.x -= 1
+                        self.move_right()
                     elif event.key == pygame.K_LEFT:
-                        self.current_piece.x -= 1
-                        # moving_left = True
-                        if not self.is_valid_space():
-                            self.current_piece.x += 1
+                        self.move_left()
                     elif event.key == pygame.K_DOWN:
-                        self.current_piece.y += 1
-                        # moving_down = True
-                        if not self.is_valid_space():
-                            self.current_piece.y -= 1
-                            self.lock_piece()
+                        self.move_down()
                     elif event.key == pygame.K_UP:
                         self.current_piece.orientation = (self.current_piece.orientation + 1) % len(self.current_piece.shape)
                         if not self.is_valid_space():
@@ -318,7 +321,7 @@ class Game():
 
             if fall_time/1000 > fall_speed:
                 fall_time = 0
-                self.drop_piece()
+                self.move_down()
 
 
 
