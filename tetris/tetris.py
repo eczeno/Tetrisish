@@ -18,6 +18,8 @@ BLOCK_SIZE = GRID_PX_HEIGHT // GRID_HEIGHT
 TOP_LEFT_X = (WIDTH - GRID_PX_WIDTH) // 2
 TOP_LEFT_Y = HEIGHT - GRID_PX_HEIGHT
 INIT_FALL_SPEED = 1
+NEXT_TOP_LEFT_X = 460
+NEXT_TOP_LEFT_Y = 100
 
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
@@ -180,16 +182,27 @@ class Game():
     def draw_window(self):
         self.window.fill(BACKGROUND)
 
+        # Draw next_piece
+        for block in self.next_piece.shape[0]:
+
+            pygame.draw.rect(self.window, 
+                             self.next_piece.color, 
+                             (NEXT_TOP_LEFT_X + block[0]*BLOCK_SIZE, NEXT_TOP_LEFT_Y + block[1]*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 
+                             0
+                            )
+
+        # Draw red outline
         pygame.draw.rect(self.window, RED, (TOP_LEFT_X, TOP_LEFT_Y, GRID_PX_WIDTH, GRID_PX_HEIGHT), 5)
         
+        # Draw the grid
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
-                pygame.draw.rect(
-                    self.window, 
-                    self.grid[i][j], 
-                    (TOP_LEFT_X + j*BLOCK_SIZE, TOP_LEFT_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE),
-                    0
-                    )
+
+                pygame.draw.rect(self.window, 
+                                 self.grid[i][j], 
+                                 (TOP_LEFT_X + j*BLOCK_SIZE, TOP_LEFT_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE),
+                                 0
+                                )
         
         self.draw_grid_lines(self.window, self.grid)
 
@@ -281,10 +294,6 @@ class Game():
                     self.grid[y][x] = self.current_piece.color
             
 
-            
-
-            
-            self.window.fill(BACKGROUND)
             self.draw_window()
             pygame.display.update()
 
