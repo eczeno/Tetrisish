@@ -4,12 +4,14 @@ import pytest
 from tetris.tetris.tetris import Game
 
 @pytest.fixture
-def get_Game():
-    
+def game():
     return Game()
 
-def test_init(get_Game):
-    game = get_Game
+def test_init(game):
     assert len(game.grid) == 20
     for row in game.grid:
         assert len(row) == 10
+
+
+def test_is_valid_space(game):
+    assert game.is_valid_space() == True
