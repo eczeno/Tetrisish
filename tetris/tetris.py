@@ -22,7 +22,7 @@ INIT_FALL_SPEED = 1
 MOVE_SPEED = 0.1
 NEXT_TOP_LEFT_X = 490
 NEXT_TOP_LEFT_Y = 150
-CYCLES_TO_INCREASE_LEVEL = 10000
+CYCLES_TO_INCREASE_LEVEL = 50000
 
 SCORE_REFERENCE = {'1': 40, '2': 100, '3': 300, '4': 1200}
 
@@ -70,7 +70,7 @@ J = [[(1,0), (1,1), (0,2), (1,2)],
 
 SHAPES = [O, Z, S, J, L, T, I]
 SHAPE_COLORS = [YELLOW, RED, BLUE, GREEN, CYAN, PURPLE, ORANGE]
-SHAPE_NAMES = ['O', 'Z', 'S', 'J', 'L', 'T', 'I']
+
 
 
 # Create input box class
@@ -121,18 +121,14 @@ class Piece():
         self.y = y
         self.shape = shape
         self.color = SHAPE_COLORS[SHAPES.index(shape)]
-        self.name = SHAPE_NAMES[SHAPES.index(shape)]
         self.orientation = 0
-    
-    def __repr__(self):
-        return f'{name} at ({self.x}, {self.y})'
-        
+
 
 # Create Game class:
 class Game():
     """Represents the game itself and the playing loop """
     def __init__(self, name='player1'):
-        # pygame.init()
+        # Initiate PyGame
         pygame.init()
         # Create display surface
         self.window = pygame.display.set_mode(SIZE) 
@@ -237,6 +233,15 @@ class Game():
         return grid
 
 
+    def get_overall_max(self):
+        overall_max = 0
+        for name, scores in self.scores.items():
+            if max(scores) > overall_max:
+                overall_max = max(scores)
+                overall_name = name
+        return overall_name, overall_max
+
+
     def draw_window(self):
         self.window.fill(BACKGROUND)
 
@@ -259,16 +264,31 @@ class Game():
         # Draw current score
         score_font = pygame.font.SysFont('comicsans', 30)
         score_label = score_font.render(f'Score: {self.score}', 1, BLUE)
-        self.window.blit(score_label, (TOP_LEFT_X - 130, TOP_LEFT_Y + 130))
+        self.window.blit(score_label, (TOP_LEFT_X - 140, TOP_LEFT_Y + 130))
 
-        # Draw max score
-        max_font = pygame.font.SysFont('comicsans', 25)
-        max_label = max_font.render(f'Max Score: {self.max_score}', 1, RED)
+        # Draw your max score
+        max_font = pygame.font.SysFont('comicsans', 20)
+        max_label = max_font.render(f'Your max score:', 1, RED)
+        max_label2 = max_font.render(f' {self.max_score}', 1, RED)
         self.window.blit(max_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 250))
+        self.window.blit(max_label2, (TOP_LEFT_X - 145, TOP_LEFT_Y + 280))
 
+        # Draw level
         level_font = pygame.font.SysFont('comicsans', 25)
         level_label = level_font.render(f'Level: {self.level}', 1, CYAN)
-        self.window.blit(level_label, (TOP_LEFT_X - 140, TOP_LEFT_Y + 350))
+        self.window.blit(level_label, (TOP_LEFT_X + 340, TOP_LEFT_Y + 350))
+
+        # Draw overall max score
+        overall_name, overall_max = self.get_overall_max()
+        overall_font = pygame.font.SysFont('comicsans', 20)
+        overall_label = overall_font.render(f'Overall max score:', 1, ORANGE)
+        overall_label2 = overall_font.render(f' {overall_max}', 1, ORANGE)
+        held_font = pygame.font.SysFont('comicsans', 20)
+        held_label = held_font.render(f'Held by: {overall_name}', 1, ORANGE)
+        self.window.blit(overall_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 450))
+        self.window.blit(held_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 510))
+        self.window.blit(overall_label2, (TOP_LEFT_X - 145, TOP_LEFT_Y + 480))
+
 
         # Draw next_piece
         for block in self.next_piece.shape[0]:
@@ -295,15 +315,18 @@ class Game():
         # Draw grid lines
         self.draw_grid_lines(self.window, self.grid)
 
+        pygame.display.update()
+
 
     def lose_game(self):
-        
+        # Record the scores
         if self.name in self.scores.keys():
             self.scores[self.name].append(self.score)
         else:
             self.scores[self.name] = [self.score]
         self.save_scores()
         
+        # Check if player wants to play again or quit
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -333,11 +356,13 @@ class Game():
 
       
     def play_again(self):
+        # Reset game state
         self.filled_blocks = {}
         self.scores = self.load_scores()
         self.max_score = max(self.scores[self.name])
+        self.score = 0
+        # Play again
         self.play()
-
 
 
     def terminate(self):        
@@ -381,9 +406,9 @@ class Game():
         cycle_count = 0
         moving_down = False
         moving_left = False
-        moving_right = False
+        moving_right = False        
         
-        
+        # Main game loop
         running = True
         while running:
             fall_time += self.clock.get_rawtime()
@@ -397,15 +422,13 @@ class Game():
                     if event.key == pygame.K_q:
                         self.terminate()
                     elif event.key == pygame.K_RIGHT:
-                        # self.move_right()
                         moving_right = True
                     elif event.key == pygame.K_LEFT:
-                        # self.move_left()
                         moving_left = True
                     elif event.key == pygame.K_DOWN:
-                        # self.move_down()
                         moving_down = True
                     elif event.key == pygame.K_UP:
+                        # Change orientation of piece
                         self.current_piece.orientation = (self.current_piece.orientation + 1) % len(self.current_piece.shape)
                         if not self.is_valid_space():
                             self.current_piece.orientation = (self.current_piece.orientation -1) % len(self.current_piece.shape)
@@ -415,11 +438,8 @@ class Game():
                     elif event.key == pygame.K_LEFT:
                         moving_left = False
                     elif event.key == pygame.K_RIGHT:
-                        moving_right = False
-                    
+                        moving_right = False             
             
-
-
             #Check for held down keys:
             if moving_down:
                 if move_time/1000 > MOVE_SPEED:
@@ -432,8 +452,7 @@ class Game():
             elif moving_right:
                 if move_time/1000 > MOVE_SPEED:
                     self.move_right()
-                    move_time = 0
-            
+                    move_time = 0            
 
             # Put piece into grid
             self.grid = self.make_grid()
@@ -446,23 +465,21 @@ class Game():
                 if y > -1:
                     self.grid[y][x] = self.current_piece.color
             
-            
+            # Check if piece needs to be dropped
             if fall_time/1000 > fall_speed:
                 fall_time = 0
                 self.move_down()
             
-            self.draw_window()
-            pygame.display.update()
-
-            
-            # Incriment cycle_count
+            # Incriment cycle_count and check to raise level
             cycle_count += 1
             if cycle_count % CYCLES_TO_INCREASE_LEVEL == 0:
                 self.level += 1
-                fall_speed = INIT_FALL_SPEED / self.level
+                fall_speed = INIT_FALL_SPEED * 0.75**self.level
+
+            self.draw_window()            
 
 
-    def menu(self):
+    def main_menu(self):
         input_box = InputBox()
         self.name = input_box.ask(self.window, "Name (lowercase)")
         if self.name in [*self.scores]:
@@ -503,7 +520,7 @@ class Game():
 
 def main():
     game = Game()
-    game.menu()
+    game.main_menu()
 
 
 if __name__ == '__main__':
