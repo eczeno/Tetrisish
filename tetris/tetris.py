@@ -22,6 +22,7 @@ INIT_FALL_SPEED = 1
 MOVE_SPEED = 0.1
 NEXT_TOP_LEFT_X = 490
 NEXT_TOP_LEFT_Y = 150
+CYCLES_TO_INCREASE_LEVEL = 10000
 
 SCORE_REFERENCE = {'1': 40, '2': 100, '3': 300, '4': 1200}
 
@@ -96,8 +97,8 @@ class Game():
         self.window = pygame.display.set_mode(SIZE) 
         pygame.display.set_caption('Tetrisish')
         #Generate pieces
-        self.current_piece = Piece(4, 0, random.choice(SHAPES))
-        self.next_piece = Piece(4, 0, random.choice(SHAPES))
+        self.current_piece = Piece(4, -2, random.choice(SHAPES))
+        self.next_piece = Piece(4, -2, random.choice(SHAPES))
         # Establish grid and filled_blocks dict
         self.filled_blocks = {}
         self.grid = self.make_grid()
@@ -108,6 +109,8 @@ class Game():
             self.next_piece.x -= 1         
         # Initialize score
         self.score = 0
+        # Initialize level
+        self.level = 1
         # Load previous scores
         self.scores = self.load_scores()
         self.max_score = max(self.scores['player1'])   
@@ -159,7 +162,7 @@ class Game():
         for block in coords:
             self.filled_blocks[block] = color
         self.current_piece = self.next_piece
-        self.next_piece = Piece(4, 0, random.choice(SHAPES))
+        self.next_piece = Piece(4, -2, random.choice(SHAPES))
         if self.next_piece.name == 'I':
             self.next_piece.x -= 1
         # Check for lines to remove:
@@ -173,10 +176,10 @@ class Game():
                 remove_count += 1
         if remove_count:
             self.score += SCORE_REFERENCE[str(remove_count)]
+        
         if self.check_lost():
             self.lose_game()
-    
-        
+            
     
     def draw_grid_lines(self, window, grid):
         sx = TOP_LEFT_X
@@ -219,7 +222,11 @@ class Game():
         # Draw max score
         max_font = pygame.font.SysFont('comicsans', 25)
         max_label = max_font.render(f'Max Score: {self.max_score}', 1, RED)
-        self.window.blit(max_label, (TOP_LEFT_X - 130, TOP_LEFT_Y + 250))
+        self.window.blit(max_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 250))
+
+        level_font = pygame.font.SysFont('comicsans', 25)
+        level_label = level_font.render(f'Level: {self.level}', 1, CYAN)
+        self.window.blit(level_label, (TOP_LEFT_X - 140, TOP_LEFT_Y + 350))
 
         # Draw next_piece
         for block in self.next_piece.shape[0]:
@@ -243,10 +250,12 @@ class Game():
                                  0
                                 )
         
+        # Draw grid lines
         self.draw_grid_lines(self.window, self.grid)
 
 
     def lose_game(self):
+        
         if 'player1' in self.scores.keys():
             self.scores['player1'].append(self.score)
         else:
@@ -294,6 +303,7 @@ class Game():
         fall_time = 0
         fall_speed = INIT_FALL_SPEED
         move_time = 0
+        cycle_count = 0
         moving_down = False
         moving_left = False
         moving_right = False
@@ -361,13 +371,20 @@ class Game():
                 if y > -1:
                     self.grid[y][x] = self.current_piece.color
             
-
-            self.draw_window()
-            pygame.display.update()
-
+            
             if fall_time/1000 > fall_speed:
                 fall_time = 0
                 self.move_down()
+            
+            self.draw_window()
+            pygame.display.update()
+
+            
+            # Incriment cycle_count
+            cycle_count += 1
+            if cycle_count % CYCLES_TO_INCREASE_LEVEL == 0:
+                self.level += 1
+                fall_speed = INIT_FALL_SPEED / self.level
 
 
 
