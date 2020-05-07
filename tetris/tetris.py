@@ -50,8 +50,8 @@ Z = [[(0,0), (1,0), (1,1), (2,1)],
 S = [[(0,0), (0,1), (1,1), (1,2)], 
      [(1,0), (2,0), (0,1), (1,1)]]
 
-I = [[(0,0), (1,0), (2,0), (3,0)], 
-     [(0,0), (0,1), (0,2), (0,3)]]
+I = [[(-1,0), (0,0), (1,0), (2,0)], 
+     [(0,-1), (0,0), (0,1), (0,2)]]
 
 T = [[(0,0), (1,0), (2,0), (1,1)], 
      [(1,0), (0,1), (1,1), (1,2)], 
@@ -101,12 +101,7 @@ class Game():
         self.next_piece = Piece(4, -2, random.choice(SHAPES))
         # Establish grid and filled_blocks dict
         self.filled_blocks = {}
-        self.grid = self.make_grid()
-        # Adjust starting position of 'I' pieces
-        if self.current_piece.name == 'I':
-            self.current_piece.x -= 1
-        if self.next_piece.name == 'I':
-            self.next_piece.x -= 1         
+        self.grid = self.make_grid()     
         # Initialize score
         self.score = 0
         # Initialize level
@@ -163,8 +158,7 @@ class Game():
             self.filled_blocks[block] = color
         self.current_piece = self.next_piece
         self.next_piece = Piece(4, -2, random.choice(SHAPES))
-        if self.next_piece.name == 'I':
-            self.next_piece.x -= 1
+        
         # Check for lines to remove:
         remove_count = 0
         for i, row in enumerate(self.grid):
