@@ -1,4 +1,4 @@
 .vscode/
 .tetris/
 __py*
-scores.txt
+*.txt
