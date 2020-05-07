@@ -73,7 +73,48 @@ SHAPE_COLORS = [YELLOW, RED, BLUE, GREEN, CYAN, PURPLE, ORANGE]
 SHAPE_NAMES = ['O', 'Z', 'S', 'J', 'L', 'T', 'I']
 
 
-# Create Classes: Piece
+# Create input box class
+class InputBox():
+
+    def __init__(self):
+        # self.window = window
+        pass
+
+
+    def get_key(self):
+        while True:
+            event = pygame.event.poll()
+            if event.type == pygame.KEYDOWN:
+                return event.key
+
+
+    def display_box(self, window, message):
+        font = pygame.font.SysFont('commicsans', 20)
+        pygame.draw.rect(window, BACKGROUND, (100, 250, 200, 20), 0)
+        pygame.draw.rect(window, WHITE, (98, 248, 204, 24), 1)
+        if len(message) != 0:
+            window.blit(font.render(message, 1, WHITE), (100, 250))
+        pygame.display.update()
+
+
+    def ask(self, window, question):
+        pygame.font.init()
+        current_string = []
+        self.display_box(window, f'{question}: {"".join(current_string)}')
+        running = True
+        while running:
+            inkey = self.get_key()
+            if inkey == pygame.K_BACKSPACE:
+                current_string = current_string[:-1]
+            elif inkey == pygame.K_RETURN:
+                break
+            elif inkey <= 127:
+                current_string.append(chr(inkey))
+            self.display_box(window, f'{question}: {"".join(current_string)}')
+        return "".join(current_string)
+
+
+# Create Piece class
 class Piece():
     def __init__(self, x, y, shape):
         self.x = x
@@ -381,10 +422,46 @@ class Game():
                 fall_speed = INIT_FALL_SPEED / self.level
 
 
+    def menu(self):
+        input_box = InputBox()
+        name = input_box.ask(self.window, "Name")
+        if name in [*self.scores]:
+            your_high_score = max(self.scores[name])
+        else:
+            your_high_score = 0
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.terminate()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        self.play()
+
+            self.window.fill(CYAN)
+
+            header_font = pygame.font.SysFont('comicsans', 80)
+            header_label = header_font.render('Welcome To Tetrisish', 1, PURPLE)
+            self.window.blit(header_label, (15,100))
+
+            greeting_font = pygame.font.SysFont('comicsans', 40)
+            greeting_label = greeting_font.render(f'Hi {name}, your high score is {your_high_score}', 1, BLUE)
+            self.window.blit(greeting_label, (60, 200))
+            
+            use_font = pygame.font.SysFont('comicsans', 30)
+            use_label = use_font.render('Use the Up, Down, Left, and Right keys', 1, RED)
+            self.window.blit(use_label, (60, 300))
+
+            play_font = pygame.font.SysFont('comicsans', 30)
+            play_label = play_font.render('Press Return/Enter to play', 1, RED)
+            self.window.blit(play_label, (60, 400))
+
+            pygame.display.update()
+            self.clock.tick(15)
 
 def main():
     game = Game()
-    game.play()
+    game.menu()
 
 
 if __name__ == '__main__':
