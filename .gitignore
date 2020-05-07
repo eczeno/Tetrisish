@@ -2,3 +2,7 @@
 .tetris/
 __py*
 .temp/
+build/
+dist/
+*.spec
+scores.txt

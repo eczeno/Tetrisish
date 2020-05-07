@@ -26,7 +26,7 @@ CYCLES_TO_INCREASE_LEVEL = 50000
 
 SCORE_REFERENCE = {'1': 40, '2': 100, '3': 300, '4': 1200}
 
-scores_PATH = Path('.temp/scores.txt') 
+scores_PATH = Path('scores.txt') 
 
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
@@ -72,15 +72,9 @@ SHAPES = [O, Z, S, J, L, T, I]
 SHAPE_COLORS = [YELLOW, RED, BLUE, GREEN, CYAN, PURPLE, ORANGE]
 
 
-
 # Create input box class
 class InputBox():
-
-    def __init__(self):
-        # self.window = window
-        pass
-
-
+    """ Thanks to Timothy Downs """
     def get_key(self):
         while True:
             event = pygame.event.poll()
@@ -134,8 +128,8 @@ class Game():
         self.window = pygame.display.set_mode(SIZE) 
         pygame.display.set_caption('Tetrisish')
         #Generate pieces
-        self.current_piece = Piece(4, -2, random.choice(SHAPES))
-        self.next_piece = Piece(4, -2, random.choice(SHAPES))
+        self.current_piece = self.get_piece()
+        self.next_piece = self.get_piece()
         # Establish grid and filled_blocks dict
         self.filled_blocks = {}
         self.grid = self.make_grid()     
@@ -147,14 +141,28 @@ class Game():
         self.name = name
         # Load previous scores
         self.scores = self.load_scores()
-        self.max_score = max(self.scores[self.name])   
+        self.max_score = self.get_max_score()
         # Set clock
         self.clock = pygame.time.Clock()
+
+
+    def get_max_score(self):
+        try:
+            max_score = max(self.scores[self.name])
+        except TypeError:
+            max_score = 0
+        except KeyError:
+            max_score = 0
+        return max_score
+
+
+
+    def get_piece(self):
+        return Piece(4, -2, random.choice(SHAPES))
     
 
     def is_valid_space(self):
-        coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
-                   for block in self.current_piece.shape[self.current_piece.orientation] ]
+        coords = self.get_coordinates()
         answer = True
         for block in coords:
             x = block[0]
@@ -169,8 +177,10 @@ class Game():
 
 
     def remove_line(self, i, row):
+        # Remove line from filled_blocks
         for j in range(len(row)):
             self.filled_blocks.pop((j, i))
+        # Move filled blocks above the line down one level
         move_down = []        
         for x, y in [*self.filled_blocks]:
             if y < i:
@@ -188,15 +198,19 @@ class Game():
                 answer = True
         return answer
 
+    
+    def get_coordinates(self):
+        return [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
+                   for block in self.current_piece.shape[self.current_piece.orientation] ]
+
        
     def lock_piece(self):
-        coords = [ (self.current_piece.x + block[0], self.current_piece.y + block[1]) 
-                   for block in self.current_piece.shape[self.current_piece.orientation] ]
+        coords = self.get_coordinates()
         color = self.current_piece.color
         for block in coords:
             self.filled_blocks[block] = color
         self.current_piece = self.next_piece
-        self.next_piece = Piece(4, -2, random.choice(SHAPES))
+        self.next_piece = self.get_piece()
         
         # Check for lines to remove:
         remove_count = 0
@@ -225,7 +239,9 @@ class Game():
 
 
     def make_grid(self):
+        # Create blank grid
         grid = [[BACKGROUND for _ in range(10)] for _ in range(20)]
+        # Fill in filled squares
         for j in range(len(grid)):
             for i in range(len(grid[j])):
                 if (i, j) in self.filled_blocks:                    
@@ -235,6 +251,7 @@ class Game():
 
     def get_overall_max(self):
         overall_max = 0
+        overall_name = ""
         for name, scores in self.scores.items():
             if max(scores) > overall_max:
                 overall_max = max(scores)
@@ -243,41 +260,35 @@ class Game():
 
 
     def draw_window(self):
+        # Clear screen
         self.window.fill(BACKGROUND)
-
         # Draw header
         pygame.font.init()
         header_font = pygame.font.SysFont('comicsans', 50)
         header = header_font.render('Tetrisish', 1, PURPLE, BACKGROUND)
         self.window.blit(header, ((TOP_LEFT_X + GRID_PX_WIDTH // 2 - header.get_width() // 2), 10))
-
         # Draw next piece label
         next_font = pygame.font.SysFont('comicsans', 30)
         next_label = next_font.render('Next Piece', 1, GREEN, BACKGROUND)
         self.window.blit(next_label, (NEXT_TOP_LEFT_X - 20, NEXT_TOP_LEFT_Y - 50))
-
         # Draw name
         name_font = pygame.font.SysFont('comicsans', 20)
         name_label = name_font.render(f'Name: {self.name}', 1, YELLOW)
         self.window.blit(name_label, (TOP_LEFT_X - 140, TOP_LEFT_Y + 80))
-
         # Draw current score
         score_font = pygame.font.SysFont('comicsans', 30)
         score_label = score_font.render(f'Score: {self.score}', 1, BLUE)
         self.window.blit(score_label, (TOP_LEFT_X - 140, TOP_LEFT_Y + 130))
-
         # Draw your max score
         max_font = pygame.font.SysFont('comicsans', 20)
         max_label = max_font.render(f'Your max score:', 1, RED)
         max_label2 = max_font.render(f' {self.max_score}', 1, RED)
         self.window.blit(max_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 250))
         self.window.blit(max_label2, (TOP_LEFT_X - 145, TOP_LEFT_Y + 280))
-
         # Draw level
         level_font = pygame.font.SysFont('comicsans', 25)
         level_label = level_font.render(f'Level: {self.level}', 1, CYAN)
         self.window.blit(level_label, (TOP_LEFT_X + 340, TOP_LEFT_Y + 350))
-
         # Draw overall max score
         overall_name, overall_max = self.get_overall_max()
         overall_font = pygame.font.SysFont('comicsans', 20)
@@ -288,8 +299,6 @@ class Game():
         self.window.blit(overall_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 450))
         self.window.blit(held_label, (TOP_LEFT_X - 145, TOP_LEFT_Y + 510))
         self.window.blit(overall_label2, (TOP_LEFT_X - 145, TOP_LEFT_Y + 480))
-
-
         # Draw next_piece
         for block in self.next_piece.shape[0]:
 
@@ -298,23 +307,19 @@ class Game():
                              (NEXT_TOP_LEFT_X + block[0]*BLOCK_SIZE, NEXT_TOP_LEFT_Y + block[1]*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 
                              0
                             )
-
         # Draw red outline
-        pygame.draw.rect(self.window, RED, (TOP_LEFT_X, TOP_LEFT_Y, GRID_PX_WIDTH, GRID_PX_HEIGHT), 5)
-        
+        pygame.draw.rect(self.window, RED, (TOP_LEFT_X, TOP_LEFT_Y, GRID_PX_WIDTH, GRID_PX_HEIGHT), 5)        
         # Draw the grid
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
-
                 pygame.draw.rect(self.window, 
                                  self.grid[i][j], 
                                  (TOP_LEFT_X + j*BLOCK_SIZE, TOP_LEFT_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE),
                                  0
-                                )
-        
+                                )        
         # Draw grid lines
         self.draw_grid_lines(self.window, self.grid)
-
+        # Update screen
         pygame.display.update()
 
 
@@ -324,8 +329,7 @@ class Game():
             self.scores[self.name].append(self.score)
         else:
             self.scores[self.name] = [self.score]
-        self.save_scores()
-        
+        self.save_scores()        
         # Check if player wants to play again or quit
         while True:
             for event in pygame.event.get():
@@ -376,8 +380,13 @@ class Game():
 
     
     def load_scores(self):
-        with open(scores_PATH, 'r') as scores_file:
-            return eval(scores_file.read())
+        try:
+            with open(scores_PATH, 'r') as scores_file:
+                return eval(scores_file.read())
+        except FileNotFoundError:
+            with open(scores_PATH, 'w') as file:
+                file.write('{}')
+            self.load_scores()
 
     
     def move_left(self):
@@ -400,21 +409,21 @@ class Game():
 
     
     def play(self):
+        # Initialize local variables
         fall_time = 0
         fall_speed = INIT_FALL_SPEED
         move_time = 0
         cycle_count = 0
         moving_down = False
         moving_left = False
-        moving_right = False        
-        
+        moving_right = False
         # Main game loop
         running = True
         while running:
+            # Update times
             fall_time += self.clock.get_rawtime()
             move_time += self.clock.get_rawtime()
-            self.clock.tick()
-
+            # Check for events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.terminate()
@@ -452,40 +461,40 @@ class Game():
             elif moving_right:
                 if move_time/1000 > MOVE_SPEED:
                     self.move_right()
-                    move_time = 0            
-
+                    move_time = 0
             # Put piece into grid
             self.grid = self.make_grid()
             if not self.is_valid_space():
-                self.lose_game()
-            
+                self.lose_game()            
             for block in self.current_piece.shape[self.current_piece.orientation]:
                 x = self.current_piece.x + block[0]
                 y = self.current_piece.y + block[1]
                 if y > -1:
-                    self.grid[y][x] = self.current_piece.color
-            
+                    self.grid[y][x] = self.current_piece.color            
             # Check if piece needs to be dropped
             if fall_time/1000 > fall_speed:
                 fall_time = 0
-                self.move_down()
-            
+                self.move_down()            
             # Incriment cycle_count and check to raise level
             cycle_count += 1
             if cycle_count % CYCLES_TO_INCREASE_LEVEL == 0:
                 self.level += 1
                 fall_speed = INIT_FALL_SPEED * 0.75**self.level
 
-            self.draw_window()            
+            self.draw_window() 
+            self.clock.tick()           
 
 
     def main_menu(self):
+        # Get user name
         input_box = InputBox()
         self.name = input_box.ask(self.window, "Name (lowercase)")
+        # Check if user has played before and find previous max score
         if self.name in [*self.scores]:
             self.max_score = max(self.scores[self.name])
         else:
             self.max_score = 0
+        # Welcome screen, wait for user to press Enter/Return, then play game
         running = True
         while running:
             for event in pygame.event.get():
@@ -495,7 +504,6 @@ class Game():
                     if event.key == pygame.K_RETURN:
                         running = False
                         self.play()
-
 
             self.window.fill(CYAN)
 
@@ -517,6 +525,7 @@ class Game():
 
             pygame.display.update()
             self.clock.tick(15)
+
 
 def main():
     game = Game()
