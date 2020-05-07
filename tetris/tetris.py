@@ -131,7 +131,7 @@ class Piece():
 # Create Game class:
 class Game():
     """Represents the game itself and the playing loop """
-    def __init__(self):
+    def __init__(self, name='player1'):
         # pygame.init()
         pygame.init()
         # Create display surface
@@ -147,9 +147,11 @@ class Game():
         self.score = 0
         # Initialize level
         self.level = 1
+        # Initialize name
+        self.name = name
         # Load previous scores
         self.scores = self.load_scores()
-        self.max_score = max(self.scores['player1'])   
+        self.max_score = max(self.scores[self.name])   
         # Set clock
         self.clock = pygame.time.Clock()
     
@@ -249,6 +251,11 @@ class Game():
         next_label = next_font.render('Next Piece', 1, GREEN, BACKGROUND)
         self.window.blit(next_label, (NEXT_TOP_LEFT_X - 20, NEXT_TOP_LEFT_Y - 50))
 
+        # Draw name
+        name_font = pygame.font.SysFont('comicsans', 20)
+        name_label = name_font.render(f'Name: {self.name}', 1, YELLOW)
+        self.window.blit(name_label, (TOP_LEFT_X - 140, TOP_LEFT_Y + 80))
+
         # Draw current score
         score_font = pygame.font.SysFont('comicsans', 30)
         score_label = score_font.render(f'Score: {self.score}', 1, BLUE)
@@ -291,13 +298,46 @@ class Game():
 
     def lose_game(self):
         
-        if 'player1' in self.scores.keys():
-            self.scores['player1'].append(self.score)
+        if self.name in self.scores.keys():
+            self.scores[self.name].append(self.score)
         else:
-            self.scores['player1'] = [self.score]
+            self.scores[self.name] = [self.score]
         self.save_scores()
+        
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.terminate()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        self.play_again()
+                    elif event.key == pygame.K_q:
+                        self.terminate()                        
 
-        self.terminate()
+            pygame.draw.rect(self.window, WHITE, (150, 200, 350, 200), 0)
+
+            game_over_font = pygame.font.SysFont('comicsans', 90)
+            game_over_label = game_over_font.render('Game Over', 1, RED)
+            self.window.blit(game_over_label, (150, 260))
+
+            play_again_font = pygame.font.SysFont('comicsans', 30)
+            play_again_label = play_again_font.render('Press Enter/Return to play again', 1, ORANGE)
+            self.window.blit(play_again_label, (150, 310))
+
+            quit_font = pygame.font.SysFont('commicsans', 30)
+            quit_label = quit_font.render('Press "q" to quit', 1, ORANGE)
+            self.window.blit(quit_label, (150, 340))
+
+            self.clock.tick(15)
+            pygame.display.update()
+
+      
+    def play_again(self):
+        self.filled_blocks = {}
+        self.scores = self.load_scores()
+        self.max_score = max(self.scores[self.name])
+        self.play()
+
 
 
     def terminate(self):        
@@ -424,11 +464,11 @@ class Game():
 
     def menu(self):
         input_box = InputBox()
-        name = input_box.ask(self.window, "Name")
-        if name in [*self.scores]:
-            your_high_score = max(self.scores[name])
+        self.name = input_box.ask(self.window, "Name (lowercase)")
+        if self.name in [*self.scores]:
+            self.max_score = max(self.scores[self.name])
         else:
-            your_high_score = 0
+            self.max_score = 0
         running = True
         while running:
             for event in pygame.event.get():
@@ -436,7 +476,9 @@ class Game():
                     self.terminate()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
+                        running = False
                         self.play()
+
 
             self.window.fill(CYAN)
 
@@ -445,7 +487,7 @@ class Game():
             self.window.blit(header_label, (15,100))
 
             greeting_font = pygame.font.SysFont('comicsans', 40)
-            greeting_label = greeting_font.render(f'Hi {name}, your high score is {your_high_score}', 1, BLUE)
+            greeting_label = greeting_font.render(f'Hi {self.name}, your high score is {self.max_score}', 1, BLUE)
             self.window.blit(greeting_label, (60, 200))
             
             use_font = pygame.font.SysFont('comicsans', 30)
