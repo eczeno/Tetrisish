@@ -26,7 +26,7 @@ CYCLES_TO_INCREASE_LEVEL = 50000
 
 SCORE_REFERENCE = {'1': 40, '2': 100, '3': 300, '4': 1200}
 
-scores_PATH = Path('data/scores.txt') 
+scores_PATH = Path('.temp/scores.txt') 
 
 # Colors:
 BACKGROUND = (0, 0, 0) #BLACK
