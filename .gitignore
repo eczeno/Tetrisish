@@ -6,3 +6,4 @@ build/
 dist/
 *.spec
 scores.txt
+*.exe
