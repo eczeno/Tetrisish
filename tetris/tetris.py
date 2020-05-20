@@ -1,4 +1,4 @@
-#!/home/zeno/Desktop/tetris/.tetris/bin/python
+#!usr/bin/env python3
 
 
 import pygame
@@ -490,7 +490,8 @@ class Game():
         input_box = InputBox()
         self.name = input_box.ask(self.window, "Name (lowercase)")
         # Check if user has played before and find previous max score
-        if self.name in [*self.scores]:
+        # if self.name in [*self.scores]:
+        if self.name in self.scores.keys():
             self.max_score = max(self.scores[self.name])
         else:
             self.max_score = 0
